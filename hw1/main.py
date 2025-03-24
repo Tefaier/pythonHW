@@ -37,8 +37,8 @@ class Matrix(Tensor):
         return result + "]"
 
     def __getitem__(self, item):
-        if type(item) is list and len(item) == 2:
-            return self.two_dim_data[item[0]][item[1]]
+        if type(item) is list:
+            return Matrix((len(item), self.dimensions[1]), [value for index in item for value in self.two_dim_data[index]])
         if type(item) is int:
             return Matrix((1, self.dimensions[1]), self.two_dim_data[item])
         if type(item) is slice:
@@ -50,8 +50,18 @@ class Matrix(Tensor):
         if type(item) is tuple:
             rule_1 = item[0]
             rule_2 = item[1]
-            rows = self.two_dim_data[rule_1]
+            if type(rule_1) is int and type(rule_2) is int:
+                return self.two_dim_data[rule_1][rule_2]
+            if type(rule_1) is list:
+                rows = [self.two_dim_data[index] for index in rule_1]
+            else:
+                rows = self.two_dim_data[rule_1]
             if type(rows[0]) is int:
                 rows = [rows]
-            rows = [row[rule_2] for row in rows]
-            return Matrix((len(rows), self.dimensions[1]), [value for row in rows for value in row])
+            if type(rule_2) is list:
+                rows = [[row[index] for index in rule_2] for row in rows]
+            else:
+                rows = [[row[rule_2]] if type(row[rule_2]) is int else row[rule_2] for row in rows]
+            if type(rows[0]) is int:
+                rows = [rows]
+            return Matrix((len(rows), len(rows[0])), [value for row in rows for value in row])
