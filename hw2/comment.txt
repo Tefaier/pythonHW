@@ -1,0 +1,10 @@
+PARSING
+multithreading and multiprocessing gave much better results than synchronous calculation
+main time is spent on http request, consequently it becomes more effective when it does not wait for response
+however it as well makes it volatile, because http request can take varied time
+multiprocessing did not give any advantage because only small part of calculation is made
+
+CALCULATION
+synch, multithreading, async gave almost the same result, calculation doesn't have any waiting for results of others, sleeping etc. Consequently, parallelism doesn't give any advantage and perform as synch.
+in image calculation.png you can see that when calculation is light multiprocessing even worse than others because it spends time on creating new process
+in image calculation_2.png you can see that when calculation is heavy multiprocessing can give advantage of performing calculation on several cores at the same time

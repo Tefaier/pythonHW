@@ -1,46 +1,31 @@
 from concurrent.futures.process import ProcessPoolExecutor
 
-from bs4 import BeautifulSoup
-import grequests
 import threading
 import time
 import matplotlib.pyplot as plt
-import multiprocessing
-import concurrent
 import asyncio
+import math
 
 lock = threading.Lock()
 
-def create_url(number: int) -> str:
-    return f"https://author.today/work/genre/detective?eg=-&fnd=false&page={number}"
+def heavy(number):
+    result = 0
+    for i in range(1, 10000000):
+        result += math.sqrt(number / i) * math.pow(number + math.log(i), 2.1) / math.log(number * i + 1)
+    return result
 
-def get_soup(url: str) -> BeautifulSoup:
-    response = grequests.map([grequests.get(url)])
-    return BeautifulSoup(response[0].content.decode("utf-8"), 'html.parser')
+def worker(results: list[float], number: int):
+    result = heavy(number)
 
-def get_titles_names(soup: BeautifulSoup) -> list[str]:
-    divs = soup.find_all("div", {"class": "book-title"})
-    return [div.text.strip() for div in divs]
-
-def worker(titles: list[str], number: int):
-    results = get_titles_names(get_soup(create_url(number)))
     lock.acquire()
-    for title in results:
-        titles.append(title)
+    results.append(result)
     lock.release()
 
-async def async_worker(titles: list[str], number: int):
-    response = None
-    for result in grequests.imap([grequests.get(create_url(number))]):
-        response = result
-        break
-    content = response.content
-    soup = BeautifulSoup(content.decode("utf-8"), 'html.parser')
-    divs = soup.find_all("div", {"class": "book-title"})
-    results = [div.text.strip() for div in divs]
+async def async_worker(results: list[float], number: int):
+    result = heavy(number)
+
     lock.acquire()
-    for title in results:
-        titles.append(title)
+    results.append(result)
     lock.release()
 
 async def main():
@@ -62,7 +47,7 @@ async def main():
 
     titles = []
     threads = []
-    for i in range(size + 1, size * 2 + 1):
+    for i in range(1, size + 1):
         threads.append(threading.Thread(target=worker, args=(titles, i)))
         threads[-1].start()
     for thread in threads:
@@ -77,7 +62,7 @@ async def main():
     titles = []
     processes = []
     with ProcessPoolExecutor(max_workers=6) as pool:
-        for i in range(size * 2 + 1, size * 3 + 1):
+        for i in range(1, size + 1):
             pool.submit(worker, titles, i)
         pool.shutdown(wait=True)
 
@@ -88,7 +73,7 @@ async def main():
     start = time.time()
 
     titles = []
-    for i in range(size * 3 + 1, size * 4 + 1):
+    for i in range(1, size + 1):
         asyncio.create_task(async_worker(titles, i))
     await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
 
@@ -99,7 +84,7 @@ async def main():
     plt.figure(figsize=(15,10))
     l = plt.bar(["Synchronous", "Multithreading", "Multiprocessing", "Async"], timings, 0.5)
     plt.bar_label(l, label_type="center")
-    plt.title(f"Time of parsing {size} pages depending on method, Python 3.12, CPython")
+    plt.title("Time of calculation depending on method, Python 3.12, CPython")
     plt.ylabel("Time, s")
     plt.show()
 
