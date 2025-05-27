@@ -52,7 +52,7 @@ First and second approaches are pretty similar
 Second has a plus that it allows to make any class singleton without modifying its code, only adding inheritance from metaclass
 
 Yet both first and second have a problem of having field with instance available from outside
-If it is modified appropriately, calling class instance creating will make a new instance
+If it is modified appropriately, calling class instance creation will make a new instance, so acting not as singleton anymore
 
 Third approach of decorator is better in this regard
 It creates inner function variable for storing value and so can't be accessed from outside

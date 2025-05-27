@@ -1,6 +1,5 @@
 from typing import Tuple
 
-
 class Tensor:
     def __init__(self, dimensions: int | Tuple[int, ...], data: list[int]):
         self.dimensions = dimensions
